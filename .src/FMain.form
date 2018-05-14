@@ -1,0 +1,114 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,92,74)
+  Background = &H9F9FFF&
+  Icon = Picture["bat.png"]
+  Maximized = True
+  { mnuFile Menu
+    Text = ("File")
+    { mnuExit Menu
+      Text = ("Exit")
+    }
+  }
+  { mnuEdit Menu
+    Text = ("Edit")
+    { mnuAudacity Menu
+      Text = ("open with Audacity")
+    }
+    { mnuDelete Menu
+      Text = ("Delete current file")
+    }
+    { mnuRename Menu
+      Text = ("Rename current file")
+    }
+  }
+  { mnuView Menu
+    Text = ("View")
+    { mnuWav Menu
+      Text = ("Spectrogram{/wave} files")
+      Toggle = True
+    }
+    { mnuBigPic Menu
+      Text = ("Big Picture")
+      Toggle = True
+    }
+  }
+  { Prefs Menu
+    Text = ("Preferences")
+    { mnuInitFolder Menu
+      Text = ("Initial Folder")
+      { mnuDefaultDir Menu
+        Text = ("Use default")
+      }
+      { mnuCurrDir Menu
+        Text = ("Use Current Folder")
+      }
+    }
+  }
+  { mnuHelp Menu
+    Text = ("Help")
+    { mnuAbout Menu
+      Text = ("About") & "..."
+    }
+  }
+  { pBox PictureBox
+    MoveScaled(47,3,41,41)
+  }
+  { tmrStart #Timer
+    Delay = 300
+  }
+  { FilePicker FileChooser
+    MoveScaled(2,6,42,24)
+    Visible = False
+    ShowDetailed = True
+  }
+  { btnPlayMP3 Button
+    MoveScaled(37,42,16,4)
+    Visible = False
+    Text = ("Play MP3")
+  }
+  { lblMessage Label
+    MoveScaled(11,32,75,4)
+    Visible = False
+    Background = &HDF7FFF&
+    Alignment = Align.Center
+    Border = Border.Raised
+  }
+  { btnDeleteFile Button
+    MoveScaled(71,50,19,4)
+    Visible = False
+    Text = ("Delete Current File")
+  }
+  { btnAudacity Button
+    MoveScaled(50,48,16,4)
+    Visible = False
+    Text = ("Open in Audacity")
+  }
+  { lblNumRecordings Label
+    MoveScaled(60,38,20,4)
+    Visible = False
+    Text = ("Number of recordings")
+  }
+  { btnBatSpecies Button
+    MoveScaled(37,56,16,4)
+    Text = ("edit bat species")
+  }
+  { txtBatSpecies TextBox
+    MoveScaled(53,56,24,4)
+    Font = Font["Bold,+1"]
+    ToolTip = ("30 characters max")
+  }
+  { btnSave Button
+    MoveScaled(76,56,16,4)
+    Text = ("save changes")
+  }
+  { txtCallType TextBox
+    MoveScaled(53,62,24,4)
+    ToolTip = ("30 characters max")
+  }
+  { btnProcessWAVs Button
+    MoveScaled(63,18,22,4)
+    Text = ("process WAV files")
+  }
+}

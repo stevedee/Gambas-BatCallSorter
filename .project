@@ -1,0 +1,21 @@
+# Gambas Project File 3.0
+Title=BatCallSorter
+Startup=FMain
+Icon=bat.png
+Version=0.0.9
+Component=gb.image
+Component=gb.qt4
+Component=gb.form
+Component=gb.form.dialog
+Component=gb.settings
+Description="An app to prepare and sort bat call recordings"
+TabSize=2
+Language=en_GB
+Maintainer=steve
+Address=steve@Steve-Dell-D600
+License=General Public Licence
+Packager=1
+Systems=debian
+Menus=debian:"Applications/Graphics"
+Categories=debian:"Graphics"
+Groups=debian:"graphics"

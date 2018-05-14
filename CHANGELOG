@@ -1,0 +1,19 @@
+* Sun Sep 30 2012 steve <steve@Steve-Dell-D600> 0.0.8
+- Added Exif data filter for reduced data display
+
+* Sun Sep 30 2012 steve <steve@Steve-Dell-D600> 0.0.7
+- Added initial dir Preference.
+- Added version to Help > About
+
+* Thu Aug 02 2012 steve <steve@Steve-Dell-D600> 0.0.6
+- Fixed problem loading Gimp when spaces in file path.
+- Added check for duplicate file name+path when renaming files.
+- Added large picture view to new View menu
+- Change app icon
+
+* Tue Jul 31 2012 steve <steve@Steve-Dell-D600> 0.0.4
+- Set User.Home /Pictures as initial dir
+
+* Tue Jul 31 2012 steve <steve@Steve-Dell-D600> 0.0.3
+- Initial release
+

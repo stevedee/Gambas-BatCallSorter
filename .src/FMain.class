@@ -1,0 +1,559 @@
+' Gambas class file
+
+'+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+' BatCallSorter
+'------------
+'This helps to streamline the assessment of real-time Bat recordings made
+' on .wav files
+'
+'Need to install the following Linux packages for this app:-
+'   "audacity"  
+'   "lame"  
+'   "alsaplayer"
+'   "id3v2"
+'
+'Steve Davis
+'April 2018
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Public strImagePath As String
+Public blnBigPic As Boolean 'use most of screen for spectrogram
+
+Public Const BAT_SPECIES As String = "TPE1"    'Tag for MP3
+Public Const BAT_CALL_TYPE As String = "TIT2"   'Tag for MP3
+Public Const TE_FACTOR As String = "TALB"       'Tag for MP3 (Time Expansion factor)
+
+Public Sub _new()
+Dim strTest As String
+Dim strInitialPath As String  'initial dir for File Picker
+
+  'Only run one instance of this app
+  Exec ["pgrep", "-f", "-l", Application.Name & ".gambas"] Wait To strTest
+  If Split(Trim$(strTest), gb.newLine).Count > 1 Then
+    'Already running, so quit
+    Quit
+  Endif
+
+  'We need to be able to create & play mp3
+  strTest = ""
+  Exec ["whereis", "lame"] To strTest
+  If InStr(strTest, "bin/lame") = 0 Then
+    Message.Info("Please install: lame", "close")
+    Quit
+  Endif
+  strTest = ""
+  Exec ["whereis", "alsaplayer"] To strTest
+  If InStr(strTest, "bin/alsaplayer") = 0 Then
+    Message.Info("Please install: alsaplayer", "close")
+    Quit
+  Endif  
+  
+  'check for audacity as this is our WAV editor
+  strTest = ""
+  Exec ["whereis", "audacity"] To strTest
+  If InStr(strTest, "bin/audacity") = 0 Then
+    Message.Info("Please install: audacity", "close")
+    Quit
+  Endif
+  
+  'check for id3v2 as this is our Tag editor
+  strTest = ""
+  Exec ["whereis", "id3v2"] To strTest
+  If InStr(strTest, "bin/id3v2") = 0 Then
+    Message.Info("Please install: id3v2", "close")
+    Quit
+  Endif  
+  
+  'load user settings
+  strInitialPath = Settings["Settings/InitDir", User.Home & "/Pictures"]
+  If Not Exist(strInitialPath) Then
+    strInitialPath = User.Home
+  Endif
+  FilePicker.Dir = strInitialPath
+  FilePicker.ShowHidden = False
+  mnuWav.Value = 0
+End
+
+Public Sub Form_Open()
+  tmrStart.Start
+End
+
+Public Sub tmrStart_Timer()
+'now form has loaded, draw controls
+
+  tmrStart.Stop
+  DrawControls
+End
+
+Public Sub DrawControls()
+
+  If mnuWav.Value Then
+    Me.Text = Application.Title & " - list Spectrogram files"
+    With FilePicker
+      .Width = Me.Width * 0.35
+      .Height = Me.Height * 0.95
+      .Left = Me.Width * 0.01
+      .Top = Me.Height * 0.01
+      .Filter = ["*.png", " Picture files "]
+      .FileView.Background = Color.White
+      .Visible = True
+    End With
+    With pBox
+      .Width = Me.Width * 0.62
+      .Height = Me.Height * 0.745
+      .Left = Me.Width * 0.37
+      .Top = Me.Height * 0.01
+      .Visible = True
+    End With
+    With lblNumRecordings
+      .Left = pBox.Left
+      .Top = pBox.top + pBox.Height + lblNumRecordings.Height
+    End With
+    With btnBatSpecies
+      .Left = Me.Width * 0.6
+      .Top = lblNumRecordings.Top
+    End With
+    With txtBatSpecies
+      .Left = btnBatSpecies.Left + btnBatSpecies.Width * 1.0
+      .Top = btnBatSpecies.Top
+      .Width = Me.Width * 0.18
+      .Visible = False
+      .ReadOnly = True
+      .Background = Me.Background
+    End With
+    With txtCallType
+      .Left = btnBatSpecies.Left + btnBatSpecies.Width * 1.0
+      .Top = btnBatSpecies.Top + btnBatSpecies.Height
+      .Width = Me.Width * 0.18
+      .Visible = False
+      .ReadOnly = True
+      .Background = Me.Background
+    End With    
+    With btnSave
+      .Left = txtBatSpecies.Left + txtBatSpecies.Width
+      .top = btnBatSpecies.Top
+      .Visible = False
+    End With
+    
+    With btnPlayMP3
+      .Left = pBox.Left
+      .Top = lblNumRecordings.Top + (2.5 * lblNumRecordings.Height)
+    End With
+    With btnAudacity
+      .Left = Me.Width * 0.6
+      .Top = btnPlayMP3.Top
+    End With  
+    With btnDeleteFile
+      .Top = btnPlayMP3.Top
+      .Left = Me.Width * 0.85
+    End With
+    btnProcessWAVs.Visible = False
+  Else    'lets list the Wav files
+    Me.Text = Application.Title & " - list WAV File"
+    With FilePicker
+      .Width = Me.Width * 0.65
+      .Height = Me.Height * 0.95
+      .Left = Me.Width * 0.01
+      .Top = Me.Height * 0.01
+      .Filter = ["*.wav", " Wave files "]
+      .FileView.Background = Color.LightGray
+      .Visible = True
+    End With
+    With btnProcessWAVs
+      .Top = Me.Height * 0.4
+      .Left = Me.Width * 0.75
+      .Visible = True
+    End With
+    pBox.Visible = False
+    lblNumRecordings.Visible = False
+    btnPlayMP3.Visible = False
+    btnAudacity.Visible = False
+    btnDeleteFile.Visible = False
+    btnBatSpecies.Visible = False
+    txtBatSpecies.Visible = False
+    txtCallType.Visible = False
+    btnSave.Visible = False
+  Endif
+  With lblMessage
+    .Left = Me.Width * 0.2
+    .Top = Me.Height * 0.4
+    .Visible = False
+  End With
+End
+
+Public Sub DrawPhotoBox(blnLarge As Boolean)
+  If blnLarge Then
+    With pBox
+      .Width = Me.Width * 0.9
+      .Height = Me.Height * 0.9
+      .Left = Me.Width * 0.05
+      .Top = Me.Height * -0.05
+      .Raise
+    End With
+    FilePicker.Hide
+  Else
+    With pBox
+      .Width = Me.Width * 0.62
+      .Height = Me.Height * 0.74 '0.54
+      .Left = Me.Width * 0.37
+      .Top = Me.Height * 0.01 '+ FilePicker.Top + FilePicker.Height
+    End With
+    FilePicker.Show
+  Endif
+End
+
+Public Sub FilePicker_Change()
+'user has selected an image...so load it
+  strImagePath = FilePicker.SelectedPath
+  If strImagePath <> "" Then
+    LoadPhoto
+    txtBatSpecies.Text = GetMP3Tag(BAT_SPECIES)
+    txtCallType.Text = GetMP3Tag(BAT_CALL_TYPE)
+  Endif
+End
+
+Public Sub LoadPhoto()
+Dim strImageName As String
+Dim picPhoto As New Picture
+Dim fFactor As Float
+  
+  If strImagePath <> "" Then
+    strImageName = Mid(strImagePath, RInStr(strImagePath, "/") + 1)
+    strImageName = Mid(strImageName, 1, InStr(strImageName, ".") - 1)
+    If InStr(UCase(strImagePath), ".") > 0 Then
+      pBox.Hide
+      DrawPhotoBox(mnuBigPic.Value)
+      picPhoto = Picture.Load(strImagePath)
+      If (picPhoto.Width * 4 / 5.63) > picPhoto.Height Then
+        fFactor = pBox.Width / picPhoto.Width
+      Else
+        fFactor = pBox.Height / picPhoto.Height
+      Endif
+      pBox.Resize(picPhoto.Width * fFactor, picPhoto.Height * fFactor)
+      pBox.Picture = picPhoto
+      pBox.Stretch = True
+      pBox.Show
+      lblNumRecordings.Visible = True
+      btnPlayMP3.Visible = True
+      btnAudacity.Visible = True
+      btnDeleteFile.Visible = True
+      btnBatSpecies.Visible = True
+      txtBatSpecies.Visible = True
+      txtCallType.Visible = True
+      lblNumRecordings.Text = HowManyFiles() & " recordings"
+    Endif
+  Endif
+Catch
+  'file does not exist in this dir!
+  If Error.code <> -1 Then
+    Message.Info("Error: " & Error.Code & " - " & Error.Text, "close")
+  Endif
+End
+
+Public Sub DeleteCurrentFiles()
+'Delete currently selected file and all associated files (e.g. MP3)
+Dim lngReply As Long
+Dim strWavFile As String
+Dim strMP3File As String
+Dim strSelectNextFile As String
+
+  If strImagePath = "" Then
+    Message.Warning("You didn't select a photo for deletion!", "close")
+  Else
+    strWavFile = Replace(strImagePath, ".png", "")
+    strWavFile = Replace(strWavFile, "S_", "N_")
+    strMP3File = Replace(strImagePath, ".png", ".mp3")
+    strMP3File = Replace(strMP3File, "S_", "A_")
+    lngReply = Message.Question("Are you sure you want to delete: " & strWavFile & "?", "Yes", "No")
+    ' FilePicker.Id
+    If lngReply = 1 Then
+      strSelectNextFile = GetNextFile(strImagePath)
+      Try Kill strWavFile     'the normalised call file
+      Try Kill strImagePath   'the image file
+      Try Kill strMP3File     'the MP3 (audio) file
+      If Not Error Then
+        pBox.Hide
+        lblNumRecordings.Visible = False
+        btnDeleteFile.Visible = False
+        btnPlayMP3.Visible = False
+        btnAudacity.Visible = False
+        btnBatSpecies.Visible = False
+        txtBatSpecies.Visible = False
+        txtCallType.Visible = False
+        FilePicker.FileView.Current = strSelectNextFile
+      Endif
+    Endif
+  Endif
+  FilePicker.FileView.Reload
+  FilePicker.FileView.SetFocus
+  
+End
+
+Public Sub mnuExit_Click()
+
+  Quit
+End
+
+Public Sub mnuAudacity_Click()
+
+  OpenInAudacity
+End
+
+Public Sub OpenInAudacity()
+Dim strWaveFile As String
+
+  If strImagePath <> "" Then
+    strWaveFile = Replace(strImagePath, "S_", "N_")
+    strWaveFile = Replace(strWaveFile, ".png", "")
+    Exec ["audacity", strWaveFile]
+  Else
+    Message.Warning("Nothing selected to edit", "close")
+  Endif
+  
+End
+
+
+Public Sub mnuRename_Click()
+Dim lngReply As Long
+Dim strPath As String
+Dim strExtension As String
+Dim strNewName As String
+Dim strNewPathName As String
+
+    If strImagePath = "" Then
+      Message.Warning("Hey, no photo selected to rename!", "close")
+    Else
+      strNewName = InputBox("Enter new file name (without extension) or cancel", "Change File Name?", "")
+      If strNewName <> "" Then
+        strPath = Mid(strImagePath, 1, RInStr(strImagePath, "/"))
+        strExtension = Mid(strImagePath, InStr(strImagePath, "."))
+        strNewPathName = strPath & strNewName & strExtension
+        If Exist(strNewPathName) Then
+          Message.Warning("No chance! This file name already exists.", "Close")
+        Else
+          Try Move strImagePath To strNewPathName
+          If Error Then
+            Message.Info("Sorry mate! That didn't work!", "Close")
+          Else
+            strImagePath = strNewPathName
+            'need to do this to update FileChooser
+            FilePicker.SelectedPath = strNewName
+            FilePicker.Dir = strPath
+          Endif
+        Endif
+      Endif
+    Endif
+End
+
+Public Function HowManyFiles() As Integer
+Dim iCount As Integer
+Dim strFile As String
+
+  ' iCount = FilePicker.FileView.Count
+  For Each strFile In Dir(FilePicker.Dir, "*.wav", gb.File)
+    If InStr(strFile, "N_") > 0 Then
+      Inc iCount
+    Endif
+  Next
+  Return iCount
+  
+End
+
+Public Function GetNextFile(strFile2Delete As String) As String
+'look for current selected file and return the next one (if there is a next one!)
+Dim strFileName As String
+Dim iCount As Integer
+Dim blnMatch As Boolean
+  
+  For Each strFileName In Dir(FilePicker.Dir, "*.png", gb.File).Sort()
+    Inc iCount
+    If blnMatch Then
+      Return strFileName
+    Endif
+    If strFile2Delete = FilePicker.Dir & "/" & strFileName And FilePicker.FileView.Count > iCount Then
+        blnMatch = True
+    Endif
+  Next
+  Return "" 'no match or no more files
+  
+End
+
+
+Public Sub mnuDelete_Click()
+
+  DeleteCurrentFiles
+End
+
+Public Sub mnuAbout_Click()
+Dim strVersion As String
+
+  strVersion = Application.Version
+  Message.Info(Application.Name & " version: " & strVersion & " by Steve Davis", "close")
+End
+
+Public Sub mnuBigPic_Click()
+
+  LoadPhoto
+End
+
+Public Sub mnuDefaultDir_Click()
+
+  Settings["Settings/InitDir"] = User.Home & "/Pictures"
+  mnuDefaultDir.Checked = True
+  mnuCurrDir.Checked = False
+End
+
+Public Sub mnuCurrDir_Click()
+
+  Settings["Settings/InitDir"] = FilePicker.Dir
+  mnuCurrDir.Checked = True
+  mnuDefaultDir.Checked = False
+End
+
+
+Public Sub mnuWav_Click()
+
+  DrawControls()
+
+End
+
+Public Sub btnProcessWAVs_Click()
+Dim strWaveFile As String
+Dim iCount As Integer
+
+  Me.Mouse = 3  'hourglass
+  For Each strWaveFile In Dir(FilePicker.Dir, "*.wav", gb.File)
+    Print strWaveFile
+    lblMessage.Text = "Please wait: processing WAV files...  " & iCount
+    lblMessage.Visible = True
+    Me.Refresh
+    Wait
+    If InStr(strWaveFile, "N_") = 0 Then  'only process if file has not already been processed (i.e. no "N_" prefix)
+      Exec ["sox", "--norm=-2", FilePicker.Dir & "/" & strWaveFile, FilePicker.Dir & "/" & "N_" & strWaveFile, "remix", "1"] Wait
+      Kill FilePicker.Dir & "/" & strWaveFile
+      Exec ["sox", FilePicker.Dir & "/N_" & strWaveFile, "-n", "spectrogram", "-l", "-Z", "-15", "-z", "80", "-t", strWaveFile, "-c", Application.Title, "-o", FilePicker.Dir & "/S_" & strWaveFile & ".png"] Wait  
+      Exec ["sox", FilePicker.Dir & "/N_" & strWaveFile, FilePicker.Dir & "/A_" & strWaveFile & ".mp3", "speed", "0.1", "rate", "44100"]
+      Inc iCount
+    Endif
+  Next
+  Wait 1
+  mnuWav.Value = 1  'view Spectrogram files
+  DrawControls
+  FilePicker.Reload
+  Me.Mouse = 0
+
+End
+
+Public Sub btnPlayMP3_Click()
+Dim strMP3File As String
+
+  strMP3File = Replace(FilePicker.SelectedPath, ".png", ".mp3")
+  strMP3File = Replace(strMP3File, "S_", "A_")
+  Exec ["alsaplayer", strMP3File]
+
+End
+
+Public Sub btnDeleteFile_Click()
+
+  DeleteCurrentFiles
+
+End
+
+Public Sub btnAudacity_Click()
+
+  OpenInAudacity
+
+End
+
+Public Function GetMP3Tag(strTagType As String) As String
+Dim strMP3Tags As String
+Dim strWavFile As String
+  
+  strWavFile = Replace(FilePicker.SelectedPath, ".png", ".mp3")
+  strWavFile = Replace(strWavFile, "S_", "A_")
+  Exec ["id3v2", "-l", strWavFile] To strMP3Tags
+  If InStr(strMP3Tags, strTagType) > 0 Then
+    strMP3Tags = Mid(strMP3Tags, InStr(strMP3Tags, strTagType) + Len(strTagType))
+    strMP3Tags = Mid(strMP3Tags, InStr(strMP3Tags, ":") + 1)
+    strMP3Tags = Mid(strMP3Tags, 1, InStr(strMP3Tags, "\n") - 1)
+    strMP3Tags = Trim(strMP3Tags)
+  Else
+    strMP3Tags = "?"
+  Endif
+  Return strMP3Tags
+  
+End
+
+Public Function SetMP3Tag(strTagType As String) As Boolean
+Dim strMP3Tags As String
+Dim strMP3File As String
+Dim strWavFile As String
+  
+  strMP3File = Replace(FilePicker.SelectedPath, ".png", ".mp3")
+  strMP3File = Replace(strMP3File, "S_", "A_")
+  strWavFile = Replace(FilePicker.SelectedPath, ".png", "")
+  strWavFile = Replace(strWavFile, "S_", "N_")
+  Select Case strTagType
+    Case BAT_SPECIES
+      Exec ["id3v2", "-a", LCase(txtBatSpecies.Text), strMP3File] Wait
+      Exec ["id3v2", "-A", LCase(txtBatSpecies.Text), strMP3File] Wait
+      Exec ["id3v2", "-a", LCase(txtBatSpecies.Text), strWavFile] Wait      
+      Exec ["id3v2", "-A", LCase(txtBatSpecies.Text), strWavFile] Wait
+    Case BAT_CALL_TYPE
+      Exec ["id3v2", "-t", LCase(txtCallType.Text), strMP3File] Wait
+      Exec ["id3v2", "-t", LCase(txtCallType.Text), strWavFile] Wait
+    Case TE_FACTOR
+      Exec ["id3v2", "-c", "10x Time Expansion", strMP3File] Wait
+  End Select
+
+  Return True
+  
+Catch
+  
+End
+
+
+Public Sub btnBatSpecies_Click()
+
+  If btnSave.Visible = True Then
+    btnSave.Visible = False
+    txtBatSpecies.Background = Me.Background
+    txtBatSpecies.ReadOnly = True
+    txtCallType.Background = Me.Background
+    txtCallType.ReadOnly = True    
+    btnBatSpecies.Text = "edit bat species"
+    FilePicker.FileView.SetFocus
+  Else
+    With txtBatSpecies
+      .ReadOnly = False
+      .Background = Color.Green
+      .SetFocus
+    End With
+    With txtCallType
+      .ReadOnly = False
+      .Background = Color.Green
+      ' .SetFocus
+    End With    
+    btnSave.Visible = True
+    btnBatSpecies.Text = "cancel edit"
+  Endif
+End
+
+Public Sub btnSave_Click()
+
+  SetMP3Tag(TE_FACTOR)    'Tag to indicate 10x time expansion
+  If SetMP3Tag(BAT_SPECIES) And SetMP3Tag(BAT_CALL_TYPE) Then
+    With txtBatSpecies
+      .ReadOnly = True
+      .Background = Me.Background
+    End With
+    With txtCallType
+      .ReadOnly = True
+      .Background = Me.Background
+    End With    
+    btnSave.Visible = False
+    btnBatSpecies.Text = "edit bat species"
+    FilePicker.FileView.SetFocus
+  Endif
+
+End
