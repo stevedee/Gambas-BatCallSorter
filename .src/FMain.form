@@ -29,10 +29,6 @@
       Text = ("Spectrogram{/wave} files")
       Toggle = True
     }
-    { mnuBigPic Menu
-      Text = ("Big Picture")
-      Toggle = True
-    }
   }
   { Prefs Menu
     Text = ("Preferences")
@@ -51,9 +47,13 @@
     { mnuAbout Menu
       Text = ("About") & "..."
     }
+    { mnuBatData Menu
+      Text = ("Bat call echolocation guide")
+    }
   }
   { pBox PictureBox
     MoveScaled(47,3,41,41)
+    NoTabFocus = True
   }
   { tmrStart #Timer
     Delay = 300
@@ -61,34 +61,13 @@
   { FilePicker FileChooser
     MoveScaled(2,6,42,24)
     Visible = False
+    NoTabFocus = True
     ShowDetailed = True
   }
-  { btnPlayMP3 Button
-    MoveScaled(37,42,16,4)
-    Visible = False
-    Text = ("Play MP3")
-  }
-  { lblMessage Label
-    MoveScaled(11,32,75,4)
-    Visible = False
-    Background = &HDF7FFF&
-    Alignment = Align.Center
-    Border = Border.Raised
-  }
-  { btnDeleteFile Button
-    MoveScaled(71,50,19,4)
-    Visible = False
-    Text = ("Delete Current File")
-  }
-  { btnAudacity Button
-    MoveScaled(50,48,16,4)
-    Visible = False
-    Text = ("Open in Audacity")
-  }
-  { lblNumRecordings Label
-    MoveScaled(60,38,20,4)
-    Visible = False
-    Text = ("Number of recordings")
+  { btnProcessWAVs Button
+    MoveScaled(63,18,22,4)
+    NoTabFocus = True
+    Text = ("process WAV files")
   }
   { btnBatSpecies Button
     MoveScaled(37,56,16,4)
@@ -99,16 +78,44 @@
     Font = Font["Bold,+1"]
     ToolTip = ("30 characters max")
   }
-  { btnSave Button
-    MoveScaled(76,56,16,4)
-    Text = ("save changes")
-  }
   { txtCallType TextBox
     MoveScaled(53,62,24,4)
     ToolTip = ("30 characters max")
   }
-  { btnProcessWAVs Button
-    MoveScaled(63,18,22,4)
-    Text = ("process WAV files")
+  { btnPlayMP3 Button
+    MoveScaled(37,42,16,4)
+    Visible = False
+    NoTabFocus = True
+    Text = ("Play MP3")
+  }
+  { btnSave Button
+    MoveScaled(76,56,16,4)
+    Text = ("save changes")
+  }
+  { lblMessage Label
+    MoveScaled(11,32,75,4)
+    Visible = False
+    Background = &HDF7FFF&
+    NoTabFocus = True
+    Alignment = Align.Center
+    Border = Border.Raised
+  }
+  { btnDeleteFile Button
+    MoveScaled(71,50,19,4)
+    Visible = False
+    NoTabFocus = True
+    Text = ("Delete Current File")
+  }
+  { btnAudacity Button
+    MoveScaled(50,48,16,4)
+    Visible = False
+    NoTabFocus = True
+    Text = ("Open in Audacity")
+  }
+  { lblNumRecordings Label
+    MoveScaled(60,38,20,4)
+    Visible = False
+    NoTabFocus = True
+    Text = ("Number of recordings")
   }
 }

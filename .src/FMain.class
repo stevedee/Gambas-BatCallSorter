@@ -181,25 +181,16 @@ Public Sub DrawControls()
   End With
 End
 
-Public Sub DrawPhotoBox(blnLarge As Boolean)
-  If blnLarge Then
-    With pBox
-      .Width = Me.Width * 0.9
-      .Height = Me.Height * 0.9
-      .Left = Me.Width * 0.05
-      .Top = Me.Height * -0.05
-      .Raise
-    End With
-    FilePicker.Hide
-  Else
-    With pBox
-      .Width = Me.Width * 0.62
-      .Height = Me.Height * 0.74 '0.54
-      .Left = Me.Width * 0.37
-      .Top = Me.Height * 0.01 '+ FilePicker.Top + FilePicker.Height
-    End With
-    FilePicker.Show
-  Endif
+Public Sub DrawPhotoBox()
+
+  With pBox
+    .Width = Me.Width * 0.62
+    .Height = Me.Height * 0.74 '0.54
+    .Left = Me.Width * 0.37
+    .Top = Me.Height * 0.01 '+ FilePicker.Top + FilePicker.Height
+  End With
+  FilePicker.Show
+
 End
 
 Public Sub FilePicker_Change()
@@ -222,7 +213,7 @@ Dim fFactor As Float
     strImageName = Mid(strImageName, 1, InStr(strImageName, ".") - 1)
     If InStr(UCase(strImagePath), ".") > 0 Then
       pBox.Hide
-      DrawPhotoBox(mnuBigPic.Value)
+      DrawPhotoBox()
       picPhoto = Picture.Load(strImagePath)
       If (picPhoto.Width * 4 / 5.63) > picPhoto.Height Then
         fFactor = pBox.Width / picPhoto.Width
@@ -391,10 +382,6 @@ Dim strVersion As String
   Message.Info(Application.Name & " version: " & strVersion & " by Steve Davis", "close")
 End
 
-Public Sub mnuBigPic_Click()
-
-  LoadPhoto
-End
 
 Public Sub mnuDefaultDir_Click()
 
@@ -451,7 +438,7 @@ Dim strMP3File As String
   strMP3File = Replace(FilePicker.SelectedPath, ".png", ".mp3")
   strMP3File = Replace(strMP3File, "S_", "A_")
   Exec ["alsaplayer", strMP3File]
-
+  FilePicker.FileView.SetFocus
 End
 
 Public Sub btnDeleteFile_Click()
@@ -463,6 +450,7 @@ End
 Public Sub btnAudacity_Click()
 
   OpenInAudacity
+  FilePicker.FileView.SetFocus
 
 End
 
@@ -556,5 +544,14 @@ Public Sub btnSave_Click()
     btnBatSpecies.Text = "edit bat species"
     FilePicker.FileView.SetFocus
   Endif
+
+End
+
+Public Sub mnuBatData_Click()
+Dim strBatRef As String
+
+  strBatRef = Application.Path & "/Bat_id_data.pdf"
+  Exec ["xdg-open", strBatRef]
+  FilePicker.FileView.SetFocus
 
 End

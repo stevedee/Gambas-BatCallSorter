@@ -1,8 +1,7 @@
-general tidy up - remove refs related to original ImageViewer app.
+To-Do
+=====
 
-remove camera icon (replace with 'bat') 
-
-Remove big image option?
+general tidy up - remove refs related to original ImageViewer app. 
 
 Add error handlers
 
@@ -10,6 +9,16 @@ GetNextFile - consider Cogiers suggestion of using a String[] index instead of f
 
 sort out control tab order
 
+Auto-play (start playing) when AlsaPlayer loads.
+
+
+
+
+Done
+=====
+
+Remove big image option
+
 Return to file list (highlight/active) after closing Audacity or Alsaplayer
 
-Auto-play (start playing) when AlsaPlayer loads.
+Added a Bat Echolocation guide (pdf file) via Help menu.
