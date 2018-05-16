@@ -360,7 +360,7 @@ Dim strFile As String
 End
 
 Public Function GetNextFile(strFile2Delete As String) As String
-'look for current selected file and return the next one (if there is a next one!)
+'look for current selected PNG file and return the next one (if there is a next one!)
 Dim strFileName As String
 Dim iCount As Integer
 Dim blnMatch As Boolean
@@ -439,9 +439,10 @@ Dim iCount As Integer
   Wait 1
   mnuWav.Value = 1  'view Spectrogram files
   DrawControls
-  FilePicker.Reload
+  'now select the 1st file in the list
+  FilePicker.SelectedPath = FilePicker.Dir & "/" & Dir(FilePicker.dir, "*.png", gb.File).Sort()[0]
+  FilePicker.FileView.SetFocus
   Me.Mouse = 0
-
 End
 
 Public Sub btnPlayMP3_Click()
