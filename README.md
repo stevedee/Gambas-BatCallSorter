@@ -1,5 +1,4 @@
 # Gambas-BatCallSorter
-<<<<<<< HEAD
 
 "BatCallSorter" is a Gambas application to sort full-spectrum bat call recordings.
 
@@ -10,14 +9,14 @@ The application processes these files using SoX commands to create:-
 1. a "normalised" single channel wav file (currently the "left" channel is saved and the "right" channel is deleted).
 2. a spectrogram image file.
 3. a 10 times "time-expanded" MP3 file.
+
 The original recordings can be saved or deleted, as set in the Preferences menu.
 
 As each file is selected in the BatCallSorter:-
  - the corresponding spectrogram is displayed
- - they user may play the associated MP3 file
+ - the user may play the associated MP3 file
  - the user may open the file in Audacity
  - the user may save "bat species" & "call type", which are saved as Tags in the MP3 and WAV files (using id3 tags)
- - the user may delete any file sets (i.e. including wav, MP3 & png image file)
  - the user may delete any file, which automatically deletes the corresponding wav, MP3 & png image file
  - a running total of recordings (files) is displayed
 
