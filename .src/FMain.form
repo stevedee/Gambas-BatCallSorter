@@ -41,6 +41,9 @@
         Text = ("Use Current Folder")
       }
     }
+    { mnuDeleteOrig Menu
+      Text = ("Delete Original Recordings")
+    }
   }
   { mnuHelp Menu
     Text = ("Help")

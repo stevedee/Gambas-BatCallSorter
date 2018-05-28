@@ -13,12 +13,18 @@ Auto-play (start playing) when AlsaPlayer loads.
 
 
 
-
 Done
 =====
 
+SoX: added "trim" to remove the capacitor charge spike at the start of all recordings.
+Increased headroom (--norm) from -2 to -3 to ensure no clipping.
+
+Added option to save/delete original (unprocessed) recordings. Save in ../Originals
+
+------------
 Remove big image option
 
 Return to file list (highlight/active) after closing Audacity or Alsaplayer
 
 Added a Bat Echolocation guide (pdf file) via Help menu.
+

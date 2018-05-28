@@ -2,7 +2,7 @@
 Title=BatCallSorter
 Startup=FMain
 Icon=bat.png
-Version=0.0.10
+Version=0.0.13
 Component=gb.image
 Component=gb.qt4
 Component=gb.form

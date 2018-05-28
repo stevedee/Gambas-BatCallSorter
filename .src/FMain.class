@@ -12,6 +12,8 @@
 '   "alsaplayer"
 '   "id3v2"
 '
+'   also uses; SoX, xdg-open, pgrep, whereis, mkdir,mv
+'
 'Steve Davis
 'April 2018
 '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -407,18 +409,29 @@ End
 Public Sub btnProcessWAVs_Click()
 Dim strWaveFile As String
 Dim iCount As Integer
+Dim strMsg As String
 
   Me.Mouse = 3  'hourglass
+  If mnuDeleteOrig.Value Then
+    strMsg = " ...originals will be DELETED!"
+  Else
+    strMsg = " ...originals will be SAVED"
+  Endif
   For Each strWaveFile In Dir(FilePicker.Dir, "*.wav", gb.File)
     Print strWaveFile
-    lblMessage.Text = "Please wait: processing WAV files...  " & iCount
+    lblMessage.Text = "Please wait: processing WAV files...  " & iCount & strMsg
     lblMessage.Visible = True
     Me.Refresh
     Wait
     If InStr(strWaveFile, "N_") = 0 Then  'only process if file has not already been processed (i.e. no "N_" prefix)
-      Exec ["sox", "--norm=-2", FilePicker.Dir & "/" & strWaveFile, FilePicker.Dir & "/" & "N_" & strWaveFile, "remix", "1"] Wait
-      Kill FilePicker.Dir & "/" & strWaveFile
-      Exec ["sox", FilePicker.Dir & "/N_" & strWaveFile, "-n", "spectrogram", "-l", "-Z", "-15", "-z", "80", "-t", strWaveFile, "-c", Application.Title, "-o", FilePicker.Dir & "/S_" & strWaveFile & ".png"] Wait  
+      Exec ["sox", "--norm=-3", FilePicker.Dir & "/" & strWaveFile, FilePicker.Dir & "/" & "N_" & strWaveFile, "remix", "1", "trim", "0.15"] Wait
+      If mnuDeleteOrig.Value Then
+        Kill FilePicker.Dir & "/" & strWaveFile
+      Else
+        Exec ["mkdir", FilePicker.Dir & "/Originals"]
+        Exec ["mv", "-n", FilePicker.Dir & "/" & strWaveFile, FilePicker.Dir & "/Originals/" & strWaveFile]
+      Endif
+      Exec ["sox", FilePicker.Dir & "/N_" & strWaveFile, "-n", "spectrogram", "-l", "-Z", "-0", "-z", "90", "-t", strWaveFile, "-c", Application.Title, "-o", FilePicker.Dir & "/S_" & strWaveFile & ".png"] Wait  
       Exec ["sox", FilePicker.Dir & "/N_" & strWaveFile, FilePicker.Dir & "/A_" & strWaveFile & ".mp3", "speed", "0.1", "rate", "44100"]
       Inc iCount
     Endif
