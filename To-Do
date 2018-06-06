@@ -7,15 +7,30 @@ Add error handlers
 
 GetNextFile - consider Cogiers suggestion of using a String[] index instead of file name; does this simplify/improve code
 
-sort out control tab order
-
 Auto-play (start playing) when AlsaPlayer loads.
 
 
 
-Done
-=====
 
+Done
+====
+
+-----------Jun 5th 2018--------
+
+btnProcessWavs: Don't delete original wav until the Normalised version has been successfully created.
+
+FilePicker_Change(): Some controls need to be clear/hidden when there is no png file displayed (S_ not selected) so added
+ some ugly If...then code to determine if anything is selected in FileView.
+ 
+ SoX: Added 9kHz low pass filter for MP3 generation (not sure this makes any difference)
+
+----------May 29th 2018---------
+SoX:-
+  added "-V4" to help debug problems when running in Gambas IDE.
+  added high pass filter option to remove noise below cutoff frequency (either 1kHz, 10kHz or default 15kHz)
+  added "gain -3" to stop hp-filter clipping
+
+-----------May 25th 2018--------
 SoX: added "trim" to remove the capacitor charge spike at the start of all recordings.
 Increased headroom (--norm) from -2 to -3 to ensure no clipping.
 

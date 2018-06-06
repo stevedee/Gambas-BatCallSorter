@@ -32,6 +32,22 @@
   }
   { Prefs Menu
     Text = ("Preferences")
+    { mnuHPFilter Menu
+      Text = ("High Pass Filter")
+      { mnu1kHPFilter Menu
+        Text = ("1kHz")
+        Radio = True
+      }
+      { mnu10kHPFilter Menu
+        Text = ("10kHz")
+        Radio = True
+      }
+      { mnu15kHPFilter Menu
+        Text = ("15kHz")
+        Radio = True
+        Checked = True
+      }
+    }
     { mnuInitFolder Menu
       Text = ("Initial Folder")
       { mnuDefaultDir Menu

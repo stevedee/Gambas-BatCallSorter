@@ -20,6 +20,7 @@
 
 Public strImagePath As String
 Public blnBigPic As Boolean 'use most of screen for spectrogram
+Public strHiPassFilter As String
 
 Public Const BAT_SPECIES As String = "TPE1"    'Tag for MP3
 Public Const BAT_CALL_TYPE As String = "TIT2"   'Tag for MP3
@@ -67,6 +68,15 @@ Dim strInitialPath As String  'initial dir for File Picker
   Endif  
   
   'load user settings
+  strHiPassFilter = Settings["Settings/HP_Filter", "15k"]
+  Select Case strHiPassFilter
+    Case "15k"
+      mnu15kHPFilter.Checked = True
+    Case "10k"
+      mnu10kHPFilter.Checked = True
+    Case Else
+      mnu1kHPFilter.Checked = True
+  End Select
   strInitialPath = Settings["Settings/InitDir", User.Home & "/Pictures"]
   If Not Exist(strInitialPath) Then
     strInitialPath = User.Home
@@ -195,13 +205,29 @@ Public Sub DrawPhotoBox()
 
 End
 
+
+
 Public Sub FilePicker_Change()
-'user has selected an image...so load it
-  strImagePath = FilePicker.SelectedPath
-  If strImagePath <> "" Then
+
+  If FilePicker.FileView.Current = "" Then    'no file selected, so clear the path
+    strImagePath = ""
+  Else
+    strImagePath = FilePicker.SelectedPath
+  Endif
+  ' 
+  If strImagePath <> "" Then  'user has selected an image...so load it
     LoadPhoto
     txtBatSpecies.Text = GetMP3Tag(BAT_SPECIES)
     txtCallType.Text = GetMP3Tag(BAT_CALL_TYPE)
+  Else
+    pBox.Hide
+    lblNumRecordings.Visible = False
+    btnPlayMP3.Visible = False
+    btnAudacity.Visible = False
+    btnDeleteFile.Visible = False
+    btnBatSpecies.Visible = False
+    txtBatSpecies.Visible = False
+    txtCallType.Visible = False    
   Endif
 End
 
@@ -410,6 +436,7 @@ Public Sub btnProcessWAVs_Click()
 Dim strWaveFile As String
 Dim iCount As Integer
 Dim strMsg As String
+Dim strSpectroCaption As String
 
   Me.Mouse = 3  'hourglass
   If mnuDeleteOrig.Value Then
@@ -417,6 +444,7 @@ Dim strMsg As String
   Else
     strMsg = " ...originals will be SAVED"
   Endif
+  strSpectroCaption = Application.Title & " using " & strHiPassFilter & "Hz high-pass filter"
   For Each strWaveFile In Dir(FilePicker.Dir, "*.wav", gb.File)
     Print strWaveFile
     lblMessage.Text = "Please wait: processing WAV files...  " & iCount & strMsg
@@ -424,16 +452,18 @@ Dim strMsg As String
     Me.Refresh
     Wait
     If InStr(strWaveFile, "N_") = 0 Then  'only process if file has not already been processed (i.e. no "N_" prefix)
-      Exec ["sox", "--norm=-3", FilePicker.Dir & "/" & strWaveFile, FilePicker.Dir & "/" & "N_" & strWaveFile, "remix", "1", "trim", "0.15"] Wait
-      If mnuDeleteOrig.Value Then
-        Kill FilePicker.Dir & "/" & strWaveFile
-      Else
-        Exec ["mkdir", FilePicker.Dir & "/Originals"]
-        Exec ["mv", "-n", FilePicker.Dir & "/" & strWaveFile, FilePicker.Dir & "/Originals/" & strWaveFile]
+      ' Exec ["sox", "--norm=-3", FilePicker.Dir & "/" & strWaveFile, FilePicker.Dir & "/N_" & strWaveFile, "remix", "1", "trim", "0.15", "sinc", strHiPassFilter] Wait
+      Exec ["sox", "-V4", "--norm=-3", FilePicker.Dir & "/" & strWaveFile, FilePicker.Dir & "/N_" & strWaveFile, "remix", "1", "gain", "-3", "sinc", strHiPassFilter, "trim", "0.15"] Wait      
+      If Exist(FilePicker.Dir & "/N_" & strWaveFile) Then
+        If Not mnuDeleteOrig.Value Then     'save to ../Orignals
+          Exec ["mkdir", FilePicker.Dir & "/Originals"]
+          Exec ["mv", "-n", FilePicker.Dir & "/" & strWaveFile, FilePicker.Dir & "/Originals/" & strWaveFile]
+        Endif
+        Kill FilePicker.Dir & "/" & strWaveFile     'delete from main directory
+        Exec ["sox", FilePicker.Dir & "/N_" & strWaveFile, "-n", "spectrogram", "-l", "-Z", "-0", "-z", "90", "-t", strWaveFile, "-c", strSpectroCaption, "-o", FilePicker.Dir & "/S_" & strWaveFile & ".png"] Wait  
+        Exec ["sox", FilePicker.Dir & "/N_" & strWaveFile, FilePicker.Dir & "/A_" & strWaveFile & ".mp3", "speed", "0.1", "sinc", "-9k", "rate", "44100"]
+        Inc iCount
       Endif
-      Exec ["sox", FilePicker.Dir & "/N_" & strWaveFile, "-n", "spectrogram", "-l", "-Z", "-0", "-z", "90", "-t", strWaveFile, "-c", Application.Title, "-o", FilePicker.Dir & "/S_" & strWaveFile & ".png"] Wait  
-      Exec ["sox", FilePicker.Dir & "/N_" & strWaveFile, FilePicker.Dir & "/A_" & strWaveFile & ".mp3", "speed", "0.1", "rate", "44100"]
-      Inc iCount
     Endif
   Next
   Wait 1
@@ -443,6 +473,8 @@ Dim strMsg As String
   FilePicker.SelectedPath = FilePicker.Dir & "/" & Dir(FilePicker.dir, "*.png", gb.File).Sort()[0]
   FilePicker.FileView.SetFocus
   Me.Mouse = 0
+  Catch
+    Me.Text = "Debug: " & Error.Text
 End
 
 Public Sub btnPlayMP3_Click()
@@ -566,5 +598,27 @@ Dim strBatRef As String
   strBatRef = Application.Path & "/Bat_id_data.pdf"
   Exec ["xdg-open", strBatRef]
   FilePicker.FileView.SetFocus
+
+End
+
+
+Public Sub mnu15kHPFilter_Click()
+
+  strHiPassFilter = "15k"
+  Settings["Settings/HP_Filter"] = strHiPassFilter
+
+End
+
+Public Sub mnu1kHPFilter_Click()
+
+  strHiPassFilter = "1k"
+  Settings["Settings/HP_Filter"] = strHiPassFilter
+
+End
+
+Public Sub mnu10kHPFilter_Click()
+
+  strHiPassFilter = "10k"
+  Settings["Settings/HP_Filter"] = strHiPassFilter
 
 End
